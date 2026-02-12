@@ -324,6 +324,28 @@ def make(client: Busy38Client, description: str, follow: bool):
     ctx.invoke(make_tool, description=description, follow=follow)
 
 
+@cli.command()
+@click.option("--host", "-h", default="0.0.0.0", help="Host to bind to")
+@click.option("--port", "-p", default=8080, help="Port to listen on")
+def server(host: str, port: int):
+    """Start the API server.
+    
+    Runs the Busy Bridge API server that OpenClaw agents connect to.
+    """
+    console.print(f"[green]Starting Busy Bridge API server on {host}:{port}[/green]")
+    
+    try:
+        from .server import start_server
+        start_server(host=host, port=port)
+    except ImportError as e:
+        console.print(f"[red]Error:[/red] Failed to start server: {e}")
+        console.print("[dim]Make sure you have installed server dependencies:[/dim]")
+        console.print("  pip install busy-bridge[server]")
+        sys.exit(1)
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Server stopped[/yellow]")
+
+
 def main():
     """Entry point for the CLI."""
     cli()

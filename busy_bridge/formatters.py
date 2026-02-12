@@ -195,4 +195,4 @@ def format_cheatcode_result(result: Dict[str, Any]) -> None:
         else:
             console.print(result)
     else:
-        console.print(f"[red]✗ Failed: {result.get('error', 'Unknown error')}[/red])"
+        console.print(f"[red]✗ Failed: {result.get('error', 'Unknown error')}[/red]")
