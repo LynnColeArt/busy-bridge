@@ -252,7 +252,8 @@ async def respond_to_mission(mission_id: str, request: MissionRespondRequest):
 
 
 # Cheatcode endpoints
-@app.post("/cheatcodes/executeasync def execute_cheatcode(request: CheatcodeExecuteRequest):
+@app.post("/cheatcodes/execute")
+async def execute_cheatcode(request: CheatcodeExecuteRequest):
     """Execute a cheatcode."""
     logger.info(f"Cheatcode: {request.namespace}:{request.action}")
     try:
