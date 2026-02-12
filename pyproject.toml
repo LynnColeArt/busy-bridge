@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "busy-bridge"
+version = "0.2.0"
+description = "CLI bridge to Busy38 agent system - access sophisticated IDE, missions, and tool creation"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Glassbox Engineering"}
+]
+keywords = ["busy38", "agent", "cli", "bridge", "ide", "missions"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "click>=8.0",
+    "httpx>=0.25.0",
+    "rich>=13.0",
+    "pydantic>=2.0",
+    "websockets>=12.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.20",
+    "black>=22.0",
+    "mypy>=1.0",
+]
+
+[project.scripts]
+busy-bridge = "busy_bridge.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/LynnColeArt/busy-bridge"
+Repository = "https://github.com/LynnColeArt/busy-bridge"
+
+[tool.hatch.build.targets.wheel]
+packages = ["busy_bridge"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
