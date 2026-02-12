@@ -24,6 +24,7 @@ Set environment variables:
 ```bash
 export BUSY38_URL="http://localhost:8080"  # Busy38 API endpoint
 export BUSY38_API_KEY="your-api-key"        # Authentication token
+export BUSY38_SOURCE_PATH="/path/to/busy"   # Optional: Busy source checkout for embedded server mode
 ```
 
 Or use a config file at `~/.config/busy-bridge/config.yaml`:
@@ -40,20 +41,20 @@ api_key: your-api-key
 Execute tools via plain English:
 
 ```bash
-busy-bridge use tool "Search the web for OpenClaw documentation"
+busy-bridge tool use "Search the web for OpenClaw documentation"
 ```
 
 Create new tools:
 
 ```bash
-busy-bridge make tool "Create an RSS feed reader that checks every 3 hours"
+busy-bridge tool make "Create an RSS feed reader that checks every 3 hours"
 ```
 
 List and inspect tools:
 
 ```bash
-busy-bridge list tools
-busy-bridge show tool read_file
+busy-bridge tool list
+busy-bridge tool show read_file
 ```
 
 ### Missions
@@ -61,27 +62,27 @@ busy-bridge show tool read_file
 Start structured missions:
 
 ```bash
-busy-bridge start mission "Analyze codebase for security issues"
+busy-bridge mission start "Analyze codebase for security issues"
 ```
 
 Monitor and interact:
 
 ```bash
-busy-bridge list missions
-busy-bridge show mission mission_abc123
-busy-bridge show mission mission_abc123 --notes
+busy-bridge mission list
+busy-bridge mission show mission_abc123
+busy-bridge mission show mission_abc123 --notes
 ```
 
 Cancel if needed:
 
 ```bash
-busy-bridge cancel mission mission_abc123 --reason "Changed priorities"
+busy-bridge mission cancel mission_abc123 --reason "Changed priorities"
 ```
 
 Respond to sub-agent questions:
 
 ```bash
-busy-bridge respond mission_abc123 "Use DuckDB for persistence"
+busy-bridge mission respond mission_abc123 "Use DuckDB for persistence"
 ```
 
 ### Cheatcodes
@@ -89,8 +90,26 @@ busy-bridge respond mission_abc123 "Use DuckDB for persistence"
 Direct cheatcode invocation:
 
 ```bash
-busy-bridge use cheatcode rw4:read_file path=README.md
-busy-bridge use cheatcode rw4:shell cmd="git status"
+busy-bridge cheatcode use rw4:read_file --param path=README.md
+busy-bridge cheatcode use rw4:shell --param cmd="git status"
+```
+
+### Settings Import
+
+Detect importable model settings from other agent systems:
+
+```bash
+busy-bridge settings detect
+busy-bridge settings detect --source openclaw
+```
+
+Import detected model settings into `~/.config/busy-bridge/config.yaml`:
+
+```bash
+busy-bridge settings import
+busy-bridge settings import --source openclaw
+busy-bridge settings import --dry-run
+busy-bridge settings show
 ```
 
 ## Mission Control
@@ -98,7 +117,7 @@ busy-bridge use cheatcode rw4:shell cmd="git status"
 Follow a mission in real-time:
 
 ```bash
-busy-bridge start mission "Refactor auth module" --follow
+busy-bridge mission start "Refactor auth module" --follow
 ```
 
 This streams notes, state changes, and sub-agent communications as they happen.

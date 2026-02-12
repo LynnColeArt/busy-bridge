@@ -1,6 +1,7 @@
 """Main CLI for Busy Bridge."""
 
 import sys
+from pathlib import Path
 from typing import Optional
 
 import click
@@ -8,6 +9,7 @@ from rich.console import Console
 
 from .client import Busy38Client, Busy38Error
 from .config import Config
+from .import_settings import detect_installed_system_configs
 from .formatters import (
     format_cheatcode_result,
     format_health,
@@ -33,18 +35,18 @@ def cli(ctx: click.Context, config: Optional[str], url: Optional[str], api_key: 
     
     Use Busy38's IDE, missions, and tool creation from the command line.
     """
-    # Load config
-    cfg = Config.load()
-    
-    # Override with CLI options
+    cfg_path = Path(config).expanduser().resolve() if config else Config.default_path()
+    cfg = Config.from_file(cfg_path)
+
+    # CLI options override loaded config.
     if url:
         cfg.url = url
     if api_key:
         cfg.api_key = api_key
-    if config:
-        cfg = Config.from_file(config)
-    
-    # Create client
+
+    # Keep path for settings import/export commands.
+    ctx.meta["config_path"] = cfg_path
+
     ctx.obj = Busy38Client(cfg)
 
 
@@ -59,6 +61,73 @@ def health(client: Busy38Client):
     except Busy38Error as e:
         console.print(f"[red]Error:[/red] {e}")
         sys.exit(1)
+
+
+@cli.group()
+def settings():
+    """Settings import and configuration helpers."""
+    pass
+
+
+@settings.command("show")
+@click.pass_context
+def settings_show(ctx: click.Context):
+    """Show active Busy Bridge settings."""
+    client: Busy38Client = ctx.obj
+    cfg = client.config
+    cfg_path = Path(ctx.meta.get("config_path", Config.default_path()))
+    console.print(f"[bold]Config file:[/bold] {cfg_path}")
+    console.print(f"[bold]Busy URL:[/bold] {cfg.url}")
+    console.print(f"[bold]Agent ID:[/bold] {cfg.agent_id}")
+    console.print(f"[bold]Timeout:[/bold] {cfg.timeout}")
+    console.print(f"[bold]Model settings:[/bold] {cfg.model_settings or {}}")
+    if cfg.imported_from:
+        console.print(f"[bold]Imported from:[/bold] {cfg.imported_from}")
+    if cfg.imported_at:
+        console.print(f"[bold]Imported at:[/bold] {cfg.imported_at}")
+
+
+@settings.command("detect")
+@click.option("--source", help="Specific source system (e.g. openclaw)")
+def settings_detect(source: Optional[str]):
+    """Detect importable model settings from installed agent systems."""
+    found = detect_installed_system_configs(source=source)
+    if not found:
+        console.print("[yellow]No importable agent-system model settings detected.[/yellow]")
+        return
+    console.print(f"[green]Detected {len(found)} import candidate(s):[/green]")
+    for hit in found:
+        console.print(f"- [bold]{hit.system}[/bold] ({hit.config_path})")
+        console.print(f"  model settings: {hit.model_settings}")
+
+
+@settings.command("import")
+@click.option("--source", help="Specific source system to import from (e.g. openclaw)")
+@click.option("--dry-run", is_flag=True, help="Preview import without writing config")
+@click.pass_context
+def settings_import(ctx: click.Context, source: Optional[str], dry_run: bool):
+    """Import detected model settings into Busy Bridge config."""
+    client: Busy38Client = ctx.obj
+    found = detect_installed_system_configs(source=source)
+    if not found:
+        console.print("[yellow]No importable settings found.[/yellow]")
+        return
+
+    selected = found[0]
+    cfg = client.config
+    preview = dict(cfg.model_settings or {})
+    preview.update(selected.model_settings)
+
+    console.print(f"[green]Import source:[/green] {selected.system} ({selected.config_path})")
+    console.print(f"[green]Merged model settings:[/green] {preview}")
+    if dry_run:
+        console.print("[cyan]Dry run only; no file written.[/cyan]")
+        return
+
+    cfg.apply_model_import(selected.system, selected.model_settings)
+    cfg_path = Path(ctx.meta.get("config_path", Config.default_path()))
+    written = cfg.save(cfg_path)
+    console.print(f"[green]✓ Imported settings saved to {written}[/green]")
 
 
 # Tool commands
