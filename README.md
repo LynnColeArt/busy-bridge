@@ -112,6 +112,19 @@ busy-bridge settings import --dry-run
 busy-bridge settings show
 ```
 
+Optionally import detected plaintext secrets/settings into Squid store (key-store):
+
+```bash
+pip install "busy-bridge[keystore]"
+# If you have the local key-store repo (recommended for Busy), install it too:
+#   pip install -e ../key-store
+busy-bridge settings import --source openclaw --to-squidstore
+busy-bridge settings import --source codex --to-squidstore --squidstore-db ./data/keystore.duckdb
+```
+
+Detected sources include common dot-config systems such as `.openclaw`, `.opencode`, `.codex`, `.claude` and related `~/.config/...` variants.
+When plaintext keys are found (for example in `.env` or config files), bridge can import them into Squid store instead of keeping secrets in plain YAML.
+
 ## Mission Control
 
 Follow a mission in real-time:

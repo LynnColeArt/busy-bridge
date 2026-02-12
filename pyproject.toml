@@ -40,6 +40,13 @@ dev = [
     "black>=22.0",
     "mypy>=1.0",
 ]
+keystore = [
+    # Encrypted secret import/export. In this workspace, install from the sibling repo:
+    #   pip install -e ../key-store
+    # If you rely on source-path loading, ensure deps are present:
+    "duckdb",
+    "cryptography",
+]
 
 [project.scripts]
 busy-bridge = "busy_bridge.cli:main"

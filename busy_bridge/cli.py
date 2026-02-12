@@ -9,7 +9,7 @@ from rich.console import Console
 
 from .client import Busy38Client, Busy38Error
 from .config import Config
-from .import_settings import detect_installed_system_configs
+from .import_settings import detect_installed_system_configs, import_detection_to_squid_store
 from .formatters import (
     format_cheatcode_result,
     format_health,
@@ -98,14 +98,26 @@ def settings_detect(source: Optional[str]):
     console.print(f"[green]Detected {len(found)} import candidate(s):[/green]")
     for hit in found:
         console.print(f"- [bold]{hit.system}[/bold] ({hit.config_path})")
-        console.print(f"  model settings: {hit.model_settings}")
+        console.print(f"  model settings: {hit.model_settings or {}}")
+        console.print(f"  agent settings: {hit.agent_settings or {}}")
+        console.print(f"  plaintext secrets detected: {len(hit.secrets)}")
 
 
 @settings.command("import")
 @click.option("--source", help="Specific source system to import from (e.g. openclaw)")
 @click.option("--dry-run", is_flag=True, help="Preview import without writing config")
+@click.option("--to-squidstore", is_flag=True, help="Also import detected settings/secrets into Squid store")
+@click.option("--squidstore-db", type=click.Path(), help="Squid store DB path override")
+@click.option("--target-agent-id", default="busy-bridge", help="Target agent_id in Squid store")
 @click.pass_context
-def settings_import(ctx: click.Context, source: Optional[str], dry_run: bool):
+def settings_import(
+    ctx: click.Context,
+    source: Optional[str],
+    dry_run: bool,
+    to_squidstore: bool,
+    squidstore_db: Optional[str],
+    target_agent_id: str,
+):
     """Import detected model settings into Busy Bridge config."""
     client: Busy38Client = ctx.obj
     found = detect_installed_system_configs(source=source)
@@ -122,12 +134,34 @@ def settings_import(ctx: click.Context, source: Optional[str], dry_run: bool):
     console.print(f"[green]Merged model settings:[/green] {preview}")
     if dry_run:
         console.print("[cyan]Dry run only; no file written.[/cyan]")
+        if to_squidstore:
+            console.print("[cyan]Dry run only; no Squid store writes.[/cyan]")
         return
 
     cfg.apply_model_import(selected.system, selected.model_settings)
     cfg_path = Path(ctx.meta.get("config_path", Config.default_path()))
     written = cfg.save(cfg_path)
     console.print(f"[green]✓ Imported settings saved to {written}[/green]")
+
+    if to_squidstore:
+        result = import_detection_to_squid_store(
+            selected,
+            target_agent_id=target_agent_id,
+            db_path=Path(squidstore_db).expanduser().resolve() if squidstore_db else None,
+            import_secrets=True,
+            import_settings=True,
+        )
+        if result.success:
+            console.print(
+                f"[green]✓ Squid store import complete ({result.db_path})[/green]\\n"
+                f"- settings records: {result.imported_settings_count}\\n"
+                f"- secret records: {result.imported_secret_count}"
+            )
+        else:
+            lines = [f"[yellow]Squid store import had errors ({result.db_path}):[/yellow]"]
+            for e in result.errors:
+                lines.append(f"- {e}")
+            console.print("\\n".join(lines))
 
 
 # Tool commands
