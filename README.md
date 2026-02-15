@@ -23,6 +23,7 @@ Before submitting generated changes, verify:
 - New behavior has at least smoke/integration validation.
 - Error behavior is explicit and documented for transport/security-sensitive paths.
 - Failure states are telemetry and should remain visible; do not introduce graceful-fallback behavior that hides runtime failures.
+- Do not merge substantial architectural changes without a tracked issue number or an associated public forum thread.
 - All relevant tests pass before merge.
 
 Busy Bridge connects OpenClaw (and other agent systems) to Busy38's advanced capabilities:
