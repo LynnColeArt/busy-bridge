@@ -4,6 +4,8 @@ CLI bridge to Busy38 - the most sophisticated agent IDE and capability platform.
 
 ## What is Busy Bridge?
 
+Roadmap note: full internal rebrand Phase 2 is deferred until after closed-beta hardening is complete.
+
 Busy Bridge connects OpenClaw (and other agent systems) to Busy38's advanced capabilities:
 
 - **Sophisticated IDE** (RangeWriter4) - LSP-powered code operations, multi-file refactoring
