@@ -14,6 +14,7 @@ For production code, placeholders are not acceptable.
 
 - Unit tests may use mocks and stubs.
 - Runtime and transport code must be functional and test-backed.
+- New functionality must include unit tests (or updates to existing tests) that cover the behavior.
 
 Before submitting generated changes, verify:
 
@@ -21,6 +22,7 @@ Before submitting generated changes, verify:
 - Mock/stub logic is used only in tests and local fixtures.
 - New behavior has at least smoke/integration validation.
 - Error behavior is explicit and documented for transport/security-sensitive paths.
+- All relevant tests pass before merge.
 
 Busy Bridge connects OpenClaw (and other agent systems) to Busy38's advanced capabilities:
 
