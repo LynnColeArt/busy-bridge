@@ -6,6 +6,22 @@ CLI bridge to Busy38 - the most sophisticated agent IDE and capability platform.
 
 Roadmap note: full internal rebrand Phase 2 is deferred until after closed-beta hardening is complete.
 
+## AI-Generated / Automated Contributions
+
+Automated code generation and AI-assisted submissions are welcome.
+
+For production code, placeholders are not acceptable.
+
+- Unit tests may use mocks and stubs.
+- Runtime and transport code must be functional and test-backed.
+
+Before submitting generated changes, verify:
+
+- No temporary placeholders in core implementation paths (`TODO`, `FIXME`, `NotImplementedError`).
+- Mock/stub logic is used only in tests and local fixtures.
+- New behavior has at least smoke/integration validation.
+- Error behavior is explicit and documented for transport/security-sensitive paths.
+
 Busy Bridge connects OpenClaw (and other agent systems) to Busy38's advanced capabilities:
 
 - **Sophisticated IDE** (RangeWriter4) - LSP-powered code operations, multi-file refactoring
