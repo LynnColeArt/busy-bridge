@@ -6,6 +6,10 @@ CLI bridge to Busy38 - the most sophisticated agent IDE and capability platform.
 
 Roadmap note: full internal rebrand Phase 2 is deferred until after closed-beta hardening is complete.
 
+## License
+
+This project is licensed under **GPL-3.0-only**. See `LICENSE`.
+
 ## AI-Generated / Automated Contributions
 
 Automated and AI-assisted contributions are welcome, provided they meet the same production standards as human-written code.
