@@ -25,6 +25,43 @@ console = Console()
 pass_client = click.make_pass_decorator(Busy38Client)
 
 
+def _follow_mission_progress(client: Busy38Client, mission_id: str) -> None:
+    """Follow mission progress and print updates as they arrive."""
+    last_state = None
+    seen_note_keys = set()
+
+    for update in client.stream_mission(mission_id):
+        mission = update.get("mission", {})
+        notes = update.get("notes", []) or []
+        state = mission.get("state", "unknown")
+
+        if state != last_state:
+            console.print(f"[dim]Mission state:[/dim] {state}")
+            last_state = state
+
+        for note in notes:
+            note_key = note.get("note_id") or note.get("id") or note.get("title")
+            if not note_key or note_key in seen_note_keys:
+                continue
+
+            seen_note_keys.add(note_key)
+            title = note.get("title", "untitled")
+            author = note.get("author_id", "system")
+            payload = note.get("payload") or {}
+            snippet = ""
+            if isinstance(payload, dict):
+                snippet = (
+                    str(payload.get("text", "")).strip()[:120]
+                    or str(payload.get("summary", "")).strip()[:120]
+                )
+            if not snippet:
+                snippet = str(payload)[:120]
+
+            console.print(f"[yellow]note[/yellow] [{author}] {title}")
+            if snippet:
+                console.print(f"  [dim]{snippet}[/dim]")
+
+
 @click.group()
 @click.option("--config", "-c", type=click.Path(), help="Path to config file")
 @click.option("--url", help="Busy38 API URL")
@@ -231,8 +268,10 @@ def make_tool(client: Busy38Client, description: str, follow: bool):
         
         if follow:
             console.print("\n[dim]Following mission progress...[/dim]")
-            # TODO: Implement streaming follow
-            console.print("[yellow]Streaming not yet implemented - use 'show mission' to check status[/yellow]")
+            if mission_id:
+                _follow_mission_progress(client, mission_id)
+            else:
+                console.print("[yellow]No mission id returned; use 'show mission' to check status[/yellow]")
         
     except Busy38Error as e:
         console.print(f"[red]Error:[/red] {e}")
@@ -270,8 +309,10 @@ def start_mission(client: Busy38Client, objective: str, role: str, max_steps: in
         
         if follow:
             console.print("\n[dim]Following mission progress...[/dim]")
-            # TODO: Implement streaming follow
-            console.print("[yellow]Streaming not yet implemented - use 'show mission' to check status[/yellow]")
+            if mission_id:
+                _follow_mission_progress(client, mission_id)
+            else:
+                console.print("[yellow]No mission id returned; use 'show mission' to check status[/yellow]")
         
     except Busy38Error as e:
         console.print(f"[red]Error:[/red] {e}")

@@ -1,7 +1,8 @@
 """HTTP client for Busy38 API."""
 
 import json
-from typing import Any, Dict, List, Optional
+import time
+from typing import Any, Dict, Iterator, List, Optional
 
 import httpx
 
@@ -19,6 +20,15 @@ class Busy38Error(Exception):
 
 class Busy38Client:
     """Client for Busy38 orchestrator API."""
+
+    _terminal_mission_states = {
+        "approved",
+        "cancelled",
+        "completed",
+        "failed",
+        "needs_revision",
+        "rejected",
+    }
     
     def __init__(self, config: Optional[Config] = None):
         self.config = config or Config.load()
@@ -143,8 +153,33 @@ class Busy38Client:
             },
         )
     
-    # Streaming for real-time updates
-    def stream_mission(self, mission_id: str):
-        """Stream mission updates (requires WebSocket or SSE support)."""
-        # TODO: Implement WebSocket streaming
-        raise NotImplementedError("Streaming not yet implemented")
+    # Streaming for real-time updates (polling fallback)
+    def stream_mission(
+        self,
+        mission_id: str,
+        poll_interval: float = 1.5,
+        max_polls: Optional[int] = None,
+    ) -> Iterator[Dict[str, Any]]:
+        """Poll a mission until it reaches a terminal state.
+
+        The API does not currently expose a websocket/SSE stream, so this
+        implementation polls the mission and notes endpoints and yields updates.
+        """
+        polls = 0
+
+        while True:
+            mission = self.get_mission(mission_id)
+            notes = self.get_mission_notes(mission_id)
+            yield {"mission": mission, "notes": notes}
+
+            state = mission.get("state", "unknown")
+            if state in self._terminal_mission_states:
+                return
+
+            polls += 1
+            if max_polls is not None and polls >= max_polls:
+                raise Busy38Error(
+                    "Mission stream timed out while waiting for terminal state."
+                )
+
+            time.sleep(poll_interval)
